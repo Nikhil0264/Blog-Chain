@@ -1,15 +1,34 @@
-import {object, z} from "zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "./ui/form";
-import { useForm } from "react-hook-form";
+"use client";
+
+import { createPost, updatePost } from "@/app/actions/posts";
+import { generateSlug } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Spinner } from "./ui/spinner";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { object, z } from "zod";
 import ImageUploader from "./image-uploader";
 import RichTextEditor from "./toolbars/editor";
-
+import { Button } from "./ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "./ui/form";
+import { Input } from "./ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+import { Spinner } from "./ui/spinner";
 
 const CreatableSelect = dynamic(() => import("react-select/creatable"), {
   ssr: false,
@@ -27,29 +46,51 @@ const formSchema = z.object({
   slug: z.string().min(3, { message: "Slug is required" }),
 });
 
-export type FormValues = z.infer<typeof formSchema>;
+export type PostFormValues = z.infer<typeof formSchema>;
 
+export default function PostForm({
+  id,
+  title,
+  content,
+  imageUrl,
+  categoryId,
+  tags,
+  status,
+  categories,
+  slug,
+}: PostFormValues) {
+  const router = useRouter();
+  const form = useForm({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      id,
+      title,
+      content,
+      imageUrl,
+      categories,
+      categoryId,
+      status,
+      slug,
+      tags,
+    },
+    mode: "onBlur",
+  });
 
+  const onSubmit = async (data: PostFormValues) => {
+    if (id) {
+      await updatePost(data);
+      toast.success("Post updated successfully");
+    } else {
+      await createPost(data);
+      toast.success("Post created successfully");
+    }
 
-export default function PostForm({id,title,content,imageUrl,categoryId,tags,categories,status,slug}: FormValues) {
+    router.refresh();
+    router.push("/posts");
+  };
 
-    const form = useForm({
-        resolver:zodResolver(formSchema),
-        defaultValues: {
-            id,
-            title,
-            content,
-            imageUrl,
-            categoryId,
-            tags,
-            categories,
-            status,
-            slug
-        }
-    })
-
-    return(
-        <Form {...form}>
+  return (
+    <Form {...form}>
       <form
         className="grid grid-cols-2 gap-6"
         onSubmit={form.handleSubmit(onSubmit)}
@@ -238,5 +279,5 @@ export default function PostForm({id,title,content,imageUrl,categoryId,tags,cate
         </Button>
       </form>
     </Form>
-    )
+  );
 }

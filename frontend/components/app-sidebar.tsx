@@ -30,7 +30,7 @@ const items = [
   },
   {
     title: "Saved Posts",
-    url: "saved-posts",
+    url: "/saved-posts",
     icon: Search,
   },
 ];
